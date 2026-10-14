@@ -118,8 +118,8 @@ function flatten(node, prefix = '', out = new Set()) {
 // ─────────────────────────────────────────────────────────────────────────
 // App-local i18n overrides
 //
-// The consumer's i18n shell (lib/i18n/i18n.ts) may carry a `LOCAL_OVERRIDES`
-// map of app-only keys — strings intentionally NOT in the published
+// The consumer's i18n shell (lib/i18n/i18n.ts) may carry app-local maps
+// of keys intentionally NOT in the published
 // @moraya/core bundle yet (they get folded into core on its next release).
 // These are legitimately "defined" for coverage purposes. Union their keys in.
 // Absent / other consumers → empty set (no effect).
@@ -130,15 +130,17 @@ function loadLocalOverrideKeys(root) {
   const path = join(root, 'lib/i18n/i18n.ts')
   if (!existsSync(path)) return keys
   const text = readFileSync(path, 'utf8')
-  // Isolate the LOCAL_OVERRIDES object literal (up to its line-start `}`
-  // closing brace) so dotted strings elsewhere in the file aren't picked up.
-  const block = text.match(/LOCAL_OVERRIDES[\s\S]*?\n\}/)
-  if (!block) return keys
-  // Extract quoted object KEYS (dotted, followed by a colon). Translation
-  // values are natural language, never `'a.b':`-shaped, so no false hits.
+  // These are the maps consulted by the app's `t` wrapper. Keep extraction
+  // within each top-level object so unrelated quoted strings do not count.
+  const mapNames = ['LOCAL_OVERRIDES', 'IMAGE_GEN_ERROR_MESSAGES', 'IMAGE_GEN_UPLOAD_MESSAGES']
   const keyRe = /(['"])([\w-]+(?:\.[\w-]+)+)\1\s*:/g
-  let m
-  while ((m = keyRe.exec(block[0])) !== null) keys.add(m[2])
+  for (const name of mapNames) {
+    const block = text.match(new RegExp(`^const ${name}\\b[\\s\\S]*?^\\}`, 'm'))
+    if (!block) continue
+    keyRe.lastIndex = 0
+    let m
+    while ((m = keyRe.exec(block[0])) !== null) keys.add(m[2])
+  }
   return keys
 }
 
