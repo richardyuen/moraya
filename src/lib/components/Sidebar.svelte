@@ -1101,6 +1101,15 @@
       </div>
     {/if}
     <div class="sidebar-actions">
+      <button
+        class="sidebar-btn"
+        onclick={openFolder}
+        title={$t('sidebar.open_folder')}
+      >
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M1.75 1A1.75 1.75 0 000 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0016 13.25v-8.5A1.75 1.75 0 0014.25 3H7.5a.25.25 0 01-.2-.1l-.9-1.2A1.75 1.75 0 005 1H1.75z"/>
+        </svg>
+      </button>
       {#if folderPath}
         <button
           class="sidebar-btn"
@@ -1175,10 +1184,12 @@
   />
 
   <div class="sidebar-content" class:drop-root={dropTargetPath === folderPath && !!folderPath}>
-    {#if knowledgeBases.length === 0}
-      <!-- No knowledge bases created yet — prompt user to add one -->
+    {#if !folderPath && knowledgeBases.length === 0}
+      <!-- No folder open and no knowledge bases — prompt user to open a
+           directory or create a knowledge base. -->
       <div class="sidebar-empty">
         <p>{$t('sidebar.create_kb')}</p>
+        <button class="open-btn" onclick={openFolder}>{$t('sidebar.open_folder')}</button>
         <button class="open-btn" onclick={() => onOpenKBManager?.()}>{$t('knowledge_base.add')}</button>
       </div>
     {:else if fileTree.length === 0}
